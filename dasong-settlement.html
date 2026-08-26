@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>大宋百商图 · 招待结算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0e6d2;
+    --bg-card: #fbf6ec;
+    --ink: #2b2218;
+    --ink-light: #6b5d4a;
+    --vermillion: #b8362b;
+    --gold: #b8893b;
+    --gold-light: #d4a857;
+    --jade: #4a7c59;
+    --border: #c9b896;
+    --border-light: #ddd0b5;
+    --shadow: rgba(43, 34, 24, 0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Serif SC', 'STSong', 'SimSun', serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(184, 137, 59, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(184, 54, 43, 0.05) 0%, transparent 50%);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 16px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .header { text-align: center; padding: 24px 16px 20px; }
+  .header::after { content: ''; display: block; width: 60px; height: 3px; background: var(--vermillion); margin: 12px auto 0; border-radius: 2px; }
+  .header h1 { font-size: 28px; font-weight: 900; letter-spacing: 4px; }
+  .header p { font-size: 13px; color: var(--ink-light); margin-top: 6px; letter-spacing: 2px; }
+  .section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .section-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1.5px solid var(--border-light);
+  }
+  .section-title .icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--vermillion); color: #fff;
+    border-radius: 6px; font-size: 14px; flex-shrink: 0;
+  }
+  .section-title .badge {
+    margin-left: auto; font-size: 20px; font-weight: 900; color: var(--vermillion);
+  }
+  .sub-label {
+    font-size: 13px; font-weight: 600; color: var(--ink-light);
+    margin: 14px 0 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .sub-label::before { content: ''; width: 3px; height: 14px; background: var(--gold); border-radius: 2px; }
+  .dish-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: rgba(184, 137, 59, 0.06);
+    border-radius: 8px; margin-bottom: 6px;
+  }
+  .dish-row.active { background: rgba(184, 137, 59, 0.15); }
+  .dish-info { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .dish-grade { font-size: 14px; font-weight: 700; min-width: 56px; }
+  .grade-1 { color: var(--vermillion); }
+  .grade-2 { color: #c97a2b; }
+  .grade-3 { color: var(--jade); }
+  .grade-4 { color: var(--ink-light); }
+  .dish-formula { font-size: 11px; color: var(--ink-light); }
+  .dish-calc { font-size: 13px; font-weight: 600; margin-left: auto; margin-right: 10px; }
+  .counter { display: flex; align-items: center; gap: 6px; }
+  .counter button {
+    width: 32px; height: 32px;
+    border: 1.5px solid var(--border); background: #fff;
+    color: var(--ink); font-size: 18px; font-weight: 700;
+    border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; line-height: 1;
+  }
+  .counter button:hover { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+  .counter button:active { transform: scale(0.92); }
+  .counter .val { min-width: 28px; text-align: center; font-size: 16px; font-weight: 700; }
+  .dice-group { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .dice-group label { font-size: 12px; color: var(--ink-light); width: 100%; margin-bottom: 2px; }
+  .dice-btn {
+    width: 38px; height: 38px;
+    border: 1.5px solid var(--border); background: #fff;
+    border-radius: 8px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; font-family: inherit; color: var(--ink);
+  }
+  .dice-btn:hover { border-color: var(--gold); }
+  .dice-btn.selected { background: var(--gold); color: #fff; border-color: var(--gold); transform: scale(1.05); }
+  .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 420px) { .shop-grid { grid-template-columns: repeat(2, 1fr); } }
+  .shop-card {
+    border: 1.5px solid var(--border-light);
+    border-radius: 8px; padding: 8px 6px 6px;
+    text-align: center; transition: all 0.2s;
+    background: #fff; position: relative;
+  }
+  .shop-card .shop-name { font-size: 13px; font-weight: 600; }
+  .shop-card .shop-income { font-size: 10px; color: var(--ink-light); margin-top: 2px; }
+  .shop-card .shop-toggles { display: flex; gap: 4px; justify-content: center; margin-top: 6px; align-items: center; }
+  .shop-toggle {
+    font-size: 11px; padding: 3px 10px;
+    border: 1.5px solid var(--border-light); border-radius: 10px;
+    color: var(--ink-light); font-weight: 700; cursor: pointer;
+    transition: all 0.15s; user-select: none; line-height: 1.3;
+    font-family: inherit;
+  }
+  .shop-toggle:hover { border-color: var(--gold); }
+  .shop-toggle.on.visit { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+  .build-mini {
+    display: flex; align-items: center; gap: 2px;
+  }
+  .build-btn {
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--border-light); background: #fff;
+    color: var(--ink); font-size: 12px; font-weight: 700;
+    border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; line-height: 1; padding: 0;
+  }
+  .build-btn:hover { background: var(--jade); color: #fff; border-color: var(--jade); }
+  .build-btn:active { transform: scale(0.9); }
+  .build-btn.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+  .build-count {
+    min-width: 20px; text-align: center; font-size: 12px; font-weight: 700;
+    color: var(--ink-light);
+  }
+  .build-count.on { color: var(--jade); }
+  .shop-card.active { border-color: var(--gold); border-width: 2px; background: rgba(184, 137, 59, 0.12); }
+  .shop-card.active .shop-income { color: var(--vermillion); font-weight: 700; }
+  .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .toggle-btn {
+    padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+    background: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; font-family: inherit; color: var(--ink);
+  }
+  .toggle-btn:hover { border-color: var(--gold); }
+  .toggle-btn.active { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+  .toggle-btn.bound { background: var(--jade); color: #fff; border-color: var(--jade); }
+  .bind-status { font-size: 11px; color: var(--jade); font-weight: 600; margin-top: 6px; display: none; }
+  .bind-status.show { display: block; }
+  .num-input-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: rgba(184, 137, 59, 0.06); border-radius: 8px;
+  }
+  .num-input-row label { font-size: 14px; flex: 1; }
+  .detail-list {
+    margin-top: 10px; padding: 10px 12px;
+    background: rgba(43, 34, 24, 0.03); border-radius: 8px;
+    font-size: 12px; line-height: 1.9; color: var(--ink-light);
+    max-height: 240px; overflow-y: auto;
+  }
+  .detail-list .detail-item { display: flex; justify-content: space-between; }
+  .detail-list .detail-item .amt { color: var(--vermillion); font-weight: 600; }
+  .detail-empty { text-align: center; opacity: 0.5; font-style: italic; }
+  .total-section {
+    background: linear-gradient(135deg, #2b2218 0%, #3d3024 100%);
+    border: 1px solid var(--gold); border-radius: 14px;
+    padding: 24px 20px; text-align: center; color: #f0e6d2;
+    position: sticky; bottom: 16px;
+    box-shadow: 0 6px 24px rgba(43, 34, 24, 0.25); z-index: 10;
+  }
+  .total-section .total-label { font-size: 13px; letter-spacing: 3px; color: var(--gold-light); margin-bottom: 8px; }
+  .total-section .total-amount { font-size: 48px; font-weight: 900; color: #fff; line-height: 1; }
+  .total-section .total-amount .unit { font-size: 20px; color: var(--gold-light); margin-left: 4px; font-weight: 400; }
+  .total-breakdown { display: flex; justify-content: center; gap: 20px; margin-top: 14px; font-size: 12px; color: rgba(240, 230, 210, 0.7); }
+  .total-breakdown span { color: var(--gold-light); font-weight: 600; }
+  .reset-btn {
+    margin-top: 14px; padding: 8px 28px;
+    background: transparent; border: 1px solid var(--gold);
+    color: var(--gold-light); border-radius: 20px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+    transition: all 0.2s; letter-spacing: 2px;
+  }
+  .reset-btn:hover { background: var(--gold); color: #2b2218; }
+  .consumed-info {
+    font-size: 12px; color: var(--ink-light);
+    margin-top: 8px; padding: 6px 12px;
+    background: rgba(74, 124, 89, 0.06); border-radius: 6px;
+  }
+  .consumed-info .warn { color: var(--vermillion); font-weight: 600; }
+  .shop-hint { font-size: 11px; color: var(--ink-light); margin-top: 6px; line-height: 1.6; }
+  .shop-hint .tag-v { color: var(--vermillion); font-weight: 700; }
+  .shop-hint .tag-b { color: var(--jade); font-weight: 700; }
+  #debugBar { font-size: 10px; color: var(--ink-light); margin-top: 6px; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>大宋百商图</h1>
+  <p>招 待 客 人 · 快 速 结 算</p>
+</div>
+
+<!-- ====== 菜品收入 ====== -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">菜</span>
+    <span>菜品收入</span>
+    <span class="badge" id="dishTotal">0</span>
+  </div>
+  <div class="sub-label">客人点菜道数</div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div class="counter">
+      <button onclick="adjustOrdered(-1)">−</button>
+      <span class="val" id="orderedVal">3</span>
+      <button onclick="adjustOrdered(1)">+</button>
+    </div>
+    <span style="font-size:12px; color:var(--ink-light);">道</span>
+  </div>
+  <div class="toggle-row" style="margin-top:10px;">
+    <button class="toggle-btn" id="btnExtra" onclick="toggleExtra()">大献殷勤（点菜+2）</button>
+    <button class="toggle-btn" id="btnShihe" onclick="toggleShihe()">时和年丰（点菜+1）</button>
+    <button class="toggle-btn" id="btnJian" onclick="toggleJian()">俭以养德（点菜−1）</button>
+  </div>
+  <div class="consumed-info" id="consumedInfo">需翻菜单 3 道 · 已翻 0 道</div>
+  <div class="sub-label">翻出的菜品（按品级填入张数）</div>
+
+  <div class="dish-row" id="rowG1">
+    <div class="dish-info"><span class="dish-grade grade-1">一品菜</span><span class="dish-formula">× (2+骰)</span></div>
+    <span class="dish-calc" id="calcG1">0</span>
+    <div class="counter"><button onclick="adjustDish('g1',-1)">−</button><span class="val" id="g1">0</span><button onclick="adjustDish('g1',1)">+</button></div>
+  </div>
+  <div class="dish-row" id="rowG2">
+    <div class="dish-info"><span class="dish-grade grade-2">二品菜</span><span class="dish-formula">× 3文</span></div>
+    <span class="dish-calc" id="calcG2">0</span>
+    <div class="counter"><button onclick="adjustDish('g2',-1)">−</button><span class="val" id="g2">0</span><button onclick="adjustDish('g2',1)">+</button></div>
+  </div>
+  <div class="dish-row" id="rowG3">
+    <div class="dish-info"><span class="dish-grade grade-3">三品菜</span><span class="dish-formula">× 2文</span></div>
+    <span class="dish-calc" id="calcG3">0</span>
+    <div class="counter"><button onclick="adjustDish('g3',-1)">−</button><span class="val" id="g3">0</span><button onclick="adjustDish('g3',1)">+</button></div>
+  </div>
+  <div class="dish-row" id="rowG4">
+    <div class="dish-info"><span class="dish-grade grade-4">四品菜</span><span class="dish-formula">× 1文</span></div>
+    <span class="dish-calc" id="calcG4">0</span>
+    <div class="counter"><button onclick="adjustDish('g4',-1)">−</button><span class="val" id="g4">0</span><button onclick="adjustDish('g4',1)">+</button></div>
+  </div>
+
+  <div class="dice-group">
+    <label>骰子点数（一品菜用）</label>
+    <button class="dice-btn" onclick="setDice(1,this,'g1')">1</button>
+    <button class="dice-btn" onclick="setDice(2,this,'g1')">2</button>
+    <button class="dice-btn" onclick="setDice(3,this,'g1')">3</button>
+    <button class="dice-btn" onclick="setDice(4,this,'g1')">4</button>
+    <button class="dice-btn" onclick="setDice(5,this,'g1')">5</button>
+    <button class="dice-btn" onclick="setDice(6,this,'g1')">6</button>
+  </div>
+</div>
+
+<!-- ====== 店铺收入 ====== -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">铺</span>
+    <span>店铺收入</span>
+    <span class="badge" id="shopTotal">0</span>
+  </div>
+  <div class="sub-label">店铺选择</div>
+  <div class="shop-grid" id="shopGrid"></div>
+  <div class="shop-hint">
+    <span class="tag-v">客</span> = 客人光顾此铺　<span class="tag-b">建 0~3</span> = 已建成栋数　蹴鞠场光顾时+2翻开菜单数（非收入）　联动：茶馆→书坊+2，关扑铺→卦肆+2，饮子铺→关扑铺+2，说书场→茶酒饮各+1，首饰铺→说绸瓷各+1
+  </div>
+  <div class="dice-group" style="margin-top:14px;">
+    <label>卦肆骰子点数（仅影响卦肆收益）</label>
+    <button class="dice-btn" onclick="setDice(1,this,'guasi')">1</button>
+    <button class="dice-btn" onclick="setDice(2,this,'guasi')">2</button>
+    <button class="dice-btn" onclick="setDice(3,this,'guasi')">3</button>
+    <button class="dice-btn" onclick="setDice(4,this,'guasi')">4</button>
+    <button class="dice-btn" onclick="setDice(5,this,'guasi')">5</button>
+    <button class="dice-btn" onclick="setDice(6,this,'guasi')">6</button>
+  </div>
+  <div class="shop-hint" id="buildCountHint" style="font-weight:600;margin-top:10px;">已建成店铺：<span id="buildCount">0</span> / 8 栋</div>
+  <div class="toggle-row">
+    <button class="toggle-btn" id="btnNojian" onclick="toggleNojian()">无尖不商（每栋 -1）</button>
+    <button class="toggle-btn" id="btnBindBuild" onclick="toggleBindBuild()">绑定建设（清空重算时保留已建栋数）</button>
+  </div>
+  <div class="bind-status" id="bindStatus">已绑定：清空重算时已建成栋数不会归零，仅重置客人光顾及其他选项</div>
+  <div class="detail-list" id="shopDetail">
+    <div class="detail-empty">勾选客人光顾且已建成的店铺，查看收益明细</div>
+  </div>
+</div>
+
+<!-- ====== 附加收入 ====== -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">余</span>
+    <span>附加收入</span>
+    <span class="badge" id="extraTotal">0</span>
+  </div>
+  <div class="num-input-row">
+    <label>客人身上的铜钱（他人插队留下的封口费）</label>
+    <div class="counter">
+      <button onclick="adjustCoins(-1)">−</button>
+      <span class="val" id="coinsVal">0</span>
+      <button onclick="adjustCoins(1)">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 总结算 ====== -->
+<div class="total-section">
+  <div class="total-label">本 次 招 待 总 收 入</div>
+  <div class="total-amount"><span id="grandTotal">0</span><span class="unit">文</span></div>
+  <div class="total-breakdown">
+    菜品 <span id="bdDish">0</span> · 店铺 <span id="bdShop">0</span> · 附加 <span id="bdExtra">0</span>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">清 空 重 算</button>
+</div>
+
+<div id="debugBar"></div>
+
+<script>
+// ====== 全局状态 ======
+var G = {
+  ordered: 3,
+  extraDishes: false,
+  shihenianfeng: false,
+  jianyiyangde: false,
+  dishes: { g1: 0, g2: 0, g3: 0, g4: 0 },
+  dice: 0,
+  diceGuasi: 0,
+  nojian: false,
+  coins: 0,
+  buildBound: false,
+  shops: {}
+};
+
+// ====== 店铺数据 ======
+var SHOP_LIST = [
+  { id: 'shufang',        name: '书坊',     desc: '3+茶馆×2' },
+  { id: 'jiusi',          name: '酒肆',     desc: '菜数+1+说书' },
+  { id: 'ciqipu',         name: '瓷器铺',   desc: '6+首饰铺' },
+  { id: 'chouduanzhuang', name: '绸缎庄',   desc: '4+首饰铺' },
+  { id: 'chaguan',        name: '茶馆',     desc: '2+说书场' },
+  { id: 'guanfupu',       name: '关扑铺',   desc: '2+饮子铺×2' },
+  { id: 'yinzpu',         name: '饮子铺',   desc: '2+说书场' },
+  { id: 'shuoshuchang',   name: '说书场',   desc: '2+首饰铺' },
+  { id: 'shoushipu',      name: '首饰铺',   desc: '固定2文' },
+  { id: 'cujuchang',      name: '蹴鞠场',   desc: '+2翻开菜单' },
+  { id: 'goulanwasi',     name: '勾栏瓦肆', desc: '已建数×1' },
+  { id: 'guasi',          name: '卦肆',     desc: '骰+关扑×2' }
+];
+
+// 初始化店铺状态：visited 为布尔，builtCount 为 0~3
+for (var i = 0; i < SHOP_LIST.length; i++) {
+  G.shops[SHOP_LIST[i].id] = { visited: false, builtCount: 0 };
+}
+
+// ====== 工具函数 ======
+function gebi(id) { return document.getElementById(id); }
+
+// 获取某店铺已建成栋数
+function getBC(shopId) {
+  return (G.shops[shopId] && G.shops[shopId].builtCount) ? G.shops[shopId].builtCount : 0;
+}
+
+// 全部已建成栋数总和
+function totalBuilt() {
+  var n = 0;
+  for (var k in G.shops) {
+    n += G.shops[k].builtCount;
+  }
+  return n;
+}
+
+// ====== 单栋店铺收益计算 ======
+// 联动方向：茶馆→书坊(+2)，关扑铺→卦肆(+2)，饮子铺→关扑铺(+2)，
+//           说书场→茶馆/酒肆/饮子铺(+1)，首饰铺→说书场/绸缎庄/瓷器铺(+1)
+function shopIncomePerBuilding(shopId, consumed, dice) {
+  switch(shopId) {
+    // 书坊：基础3 + 茶馆每栋+2
+    case 'shufang':        return 3 + getBC('chaguan') * 2;
+    // 酒肆：客人点菜数+1 + 说书场每栋+1
+    case 'jiusi':          return (consumed + 1) + getBC('shuoshuchang');
+    // 瓷器铺：基础6 + 首饰铺每栋+1
+    case 'ciqipu':         return 6 + getBC('shoushipu');
+    // 绸缎庄：基础4 + 首饰铺每栋+1
+    case 'chouduanzhuang': return 4 + getBC('shoushipu');
+    // 茶馆：基础2 + 说书场每栋+1
+    case 'chaguan':        return 2 + getBC('shuoshuchang');
+    // 关扑铺：基础2 + 饮子铺每栋+2
+    case 'guanfupu':       return 2 + getBC('yinzpu') * 2;
+    // 饮子铺：基础2 + 说书场每栋+1
+    case 'yinzpu':         return 2 + getBC('shuoshuchang');
+    // 说书场：基础2 + 首饰铺每栋+1
+    case 'shuoshuchang':   return 2 + getBC('shoushipu');
+    // 首饰铺：基础2（自身无被动加成，但给其他铺加成）
+    case 'shoushipu':      return 2;
+    // 蹴鞠场：不再产生直接收入，效果为+2翻开菜单数（在 calculate 中处理）
+    case 'cujuchang':      return 0;
+    // 勾栏瓦肆：全部已建栋数×1
+    case 'goulanwasi':     return totalBuilt();
+    // 卦肆：骰子点数 + 关扑铺每栋+2
+    case 'guasi':          return dice + getBC('guanfupu') * 2;
+    default:               return 0;
+  }
+}
+
+// ====== 渲染店铺网格 ======
+function renderShops() {
+  var html = '';
+  var tot = totalBuilt();
+  for (var i = 0; i < SHOP_LIST.length; i++) {
+    var s = SHOP_LIST[i];
+    var st = G.shops[s.id];
+    var bc = st.builtCount;
+    var cardClass = (st.visited && bc > 0) ? 'shop-card active' : 'shop-card';
+    var visitClass = st.visited ? 'shop-toggle on visit' : 'shop-toggle';
+    var plusDisabled = (bc >= 3) || (tot >= 8);
+    var minusDisabled = (bc <= 0);
+    var countClass = bc > 0 ? 'build-count on' : 'build-count';
+
+    html += '<div class="' + cardClass + '">';
+    html += '<div class="shop-name">' + s.name + '</div>';
+    html += '<div class="shop-income">' + s.desc + '</div>';
+    html += '<div class="shop-toggles">';
+    html += '<span class="' + visitClass + '" onclick="toggleVisit(\'' + s.id + '\')">客</span>';
+    html += '<div class="build-mini">';
+    html += '<button class="build-btn' + (minusDisabled ? ' disabled' : '') + '" onclick="adjustBuilt(\'' + s.id + '\',-1)">−</button>';
+    html += '<span class="' + countClass + '">' + bc + '</span>';
+    html += '<button class="build-btn' + (plusDisabled ? ' disabled' : '') + '" onclick="adjustBuilt(\'' + s.id + '\',1)">+</button>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  }
+  gebi('shopGrid').innerHTML = html;
+
+  // 更新已建栋数显示
+  var bcEl = gebi('buildCount');
+  if (bcEl) bcEl.textContent = tot;
+  var bchEl = gebi('buildCountHint');
+  if (bchEl) {
+    if (tot >= 8) bchEl.style.color = 'var(--vermillion)';
+    else if (tot >= 6) bchEl.style.color = '#c97a2b';
+    else bchEl.style.color = '';
+  }
+}
+
+// ====== 切换客人光顾 ======
+function toggleVisit(id) {
+  G.shops[id].visited = !G.shops[id].visited;
+  renderShops();
+  calculate();
+}
+
+// ====== 调整建成栋数 ======
+function adjustBuilt(id, delta) {
+  var cur = G.shops[id].builtCount;
+  if (delta > 0) {
+    // 增加限制：单店最多3栋，全局最多8栋
+    if (cur >= 3) return;
+    if (totalBuilt() >= 8) return;
+    G.shops[id].builtCount = cur + 1;
+  } else {
+    if (cur <= 0) return;
+    G.shops[id].builtCount = cur - 1;
+  }
+  renderShops();
+  calculate();
+}
+
+// ====== 调整点菜道数 ======
+function adjustOrdered(delta) {
+  G.ordered = Math.max(1, Math.min(10, G.ordered + delta));
+  gebi('orderedVal').textContent = G.ordered;
+  calculate();
+}
+
+// ====== 大献殷勤 ======
+function toggleExtra() {
+  G.extraDishes = !G.extraDishes;
+  gebi('btnExtra').classList.toggle('active', G.extraDishes);
+  calculate();
+}
+
+// ====== 时和年丰（消费菜单牌+1） ======
+function toggleShihe() {
+  G.shihenianfeng = !G.shihenianfeng;
+  gebi('btnShihe').classList.toggle('active', G.shihenianfeng);
+  calculate();
+}
+
+// ====== 俭以养德（消费菜单牌-1） ======
+function toggleJian() {
+  G.jianyiyangde = !G.jianyiyangde;
+  gebi('btnJian').classList.toggle('active', G.jianyiyangde);
+  calculate();
+}
+
+// ====== 调整菜品张数 ======
+function adjustDish(grade, delta) {
+  G.dishes[grade] = Math.max(0, Math.min(20, G.dishes[grade] + delta));
+  gebi(grade).textContent = G.dishes[grade];
+  var row = gebi('row' + grade.charAt(0).toUpperCase() + grade.charAt(1));
+  if (G.dishes[grade] > 0) row.classList.add('active');
+  else row.classList.remove('active');
+  calculate();
+}
+
+// ====== 骰子 ======
+function setDice(val, btn, type) {
+  if (type === 'guasi') {
+    G.diceGuasi = val;
+  } else {
+    G.dice = val;
+  }
+  var parent = btn.parentElement;
+  var btns = parent.getElementsByClassName('dice-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('selected');
+  }
+  btn.classList.add('selected');
+  calculate();
+}
+
+// ====== 无尖不商 ======
+function toggleNojian() {
+  G.nojian = !G.nojian;
+  gebi('btnNojian').classList.toggle('active', G.nojian);
+  calculate();
+}
+
+// ====== 绑定建设（清空重算时保留已建栋数） ======
+function toggleBindBuild() {
+  G.buildBound = !G.buildBound;
+  var btn = gebi('btnBindBuild');
+  var status = gebi('bindStatus');
+  if (G.buildBound) {
+    btn.classList.add('bound');
+    btn.textContent = '已绑定建设（点击解绑）';
+    status.classList.add('show');
+  } else {
+    btn.classList.remove('bound');
+    btn.textContent = '绑定建设（清空重算时保留已建栋数）';
+    status.classList.remove('show');
+  }
+}
+
+// ====== 调整铜钱 ======
+function adjustCoins(delta) {
+  G.coins = Math.max(0, Math.min(50, G.coins + delta));
+  gebi('coinsVal').textContent = G.coins;
+  calculate();
+}
+
+// ====== 核心：计算收益 ======
+function calculate() {
+  // --- 菜品收入 ---
+  var ordered = G.ordered + (G.extraDishes ? 2 : 0);
+  // 时和年丰：点菜+1，俭以养德：点菜-1
+  if (G.shihenianfeng) ordered += 1;
+  if (G.jianyiyangde) ordered = Math.max(0, ordered - 1);
+  var flipped = G.dishes.g1 + G.dishes.g2 + G.dishes.g3 + G.dishes.g4;
+
+  // 蹴鞠场效果：客人光顾且已建成时，翻开菜单数+2
+  var cujuActive = G.shops['cujuchang'].visited && G.shops['cujuchang'].builtCount > 0;
+  var flipCount = ordered + (cujuActive ? 2 : 0);
+
+  // 消费数 = min(需翻, 已翻)
+  var consumed = Math.min(flipCount, flipped);
+
+  var g1Income = G.dishes.g1 * (2 + G.dice);
+  var g2Income = G.dishes.g2 * 3;
+  var g3Income = G.dishes.g3 * 2;
+  var g4Income = G.dishes.g4 * 1;
+  var dishTotal = g1Income + g2Income + g3Income + g4Income;
+
+  gebi('calcG1').textContent = G.dishes.g1 > 0 ? (G.dishes.g1 + '×' + (2+G.dice) + '=' + g1Income) : '0';
+  gebi('calcG2').textContent = G.dishes.g2 > 0 ? (G.dishes.g2 + '×3=' + g2Income) : '0';
+  gebi('calcG3').textContent = G.dishes.g3 > 0 ? (G.dishes.g3 + '×2=' + g3Income) : '0';
+  gebi('calcG4').textContent = G.dishes.g4 > 0 ? (G.dishes.g4 + '×1=' + g4Income) : '0';
+  gebi('dishTotal').textContent = dishTotal;
+
+  // 消费信息显示
+  var infoParts = [];
+  infoParts.push('基础点菜 ' + G.ordered + ' 道');
+  if (G.extraDishes) infoParts.push('大献殷勤 +2');
+  if (cujuActive) infoParts.push('蹴鞠场 +2');
+  if (G.shihenianfeng) infoParts.push('时和年丰 +1');
+  if (G.jianyiyangde) infoParts.push('俭以养德 −1');
+  infoParts.push('需翻 ' + flipCount + ' 道');
+  infoParts.push('已翻 ' + flipped + ' 道');
+  if (flipped < flipCount) {
+    infoParts.push('不足，仅结算 ' + consumed + ' 道');
+    var infoHtml = infoParts.join(' · ');
+    var warnIdx = infoHtml.indexOf('不足');
+    gebi('consumedInfo').innerHTML = infoHtml.substring(0, warnIdx) + '<span class="warn">' + infoHtml.substring(warnIdx) + '</span>';
+  } else {
+    infoParts.push('消费 ' + consumed + ' 道');
+    gebi('consumedInfo').innerHTML = infoParts.join(' · ');
+  }
+
+  // --- 店铺收入 ---
+  var shopTotal = 0;
+  var detailHtml = '';
+
+  for (var i = 0; i < SHOP_LIST.length; i++) {
+    var s = SHOP_LIST[i];
+    var st = G.shops[s.id];
+    var bc = st.builtCount;
+    if (st.visited && bc > 0) {
+      // 蹴鞠场不产生直接收入，效果为+2翻开菜单数（已在菜品区处理）
+      if (s.id === 'cujuchang') {
+        detailHtml += '<div class="detail-item"><span>' + s.name + ' <span style="opacity:0.5;font-size:10px;">[+2翻开菜单]</span> <span style="opacity:0.7;font-size:10px;">效果已计入菜品区</span></span><span class="amt" style="color:var(--jade);">效果</span></div>';
+        continue;
+      }
+      // 单栋收益（联动效果基于已建成栋数）
+      var perBuilding = shopIncomePerBuilding(s.id, consumed, G.diceGuasi);
+      // 无尖不商：每栋 -1
+      if (G.nojian) perBuilding = Math.max(0, perBuilding - 1);
+      // 总收益 = 单栋 × 栋数
+      var income = perBuilding * bc;
+      shopTotal += income;
+
+      var note = '';
+      if (G.nojian) note = ' (每栋−1)';
+      var formulaStr = bc + '栋×' + perBuilding + (note);
+      detailHtml += '<div class="detail-item"><span>' + s.name + ' <span style="opacity:0.5;font-size:10px;">[' + s.desc + ']</span> <span style="opacity:0.7;font-size:10px;">' + formulaStr + '</span></span><span class="amt">+' + income + '文</span></div>';
+    }
+  }
+
+  if (detailHtml !== '') {
+    if (shopTotal > 0) {
+      detailHtml += '<div class="detail-item" style="margin-top:6px;border-top:1px solid var(--border-light);padding-top:6px;"><span style="font-weight:700;">店铺小计</span><span class="amt" style="font-size:14px;">' + shopTotal + '文</span></div>';
+    }
+    gebi('shopDetail').innerHTML = detailHtml;
+  } else {
+    var anyActive = false;
+    for (var j = 0; j < SHOP_LIST.length; j++) {
+      if (G.shops[SHOP_LIST[j].id].visited && G.shops[SHOP_LIST[j].id].builtCount > 0) { anyActive = true; break; }
+    }
+    if (anyActive) {
+      gebi('shopDetail').innerHTML = '<div class="detail-empty">所有店铺收益为0（检查联动条件或骰子点数）</div>';
+    } else {
+      gebi('shopDetail').innerHTML = '<div class="detail-empty">勾选客人光顾且已建成的店铺，查看收益明细</div>';
+    }
+  }
+  gebi('shopTotal').textContent = shopTotal;
+
+  // --- 附加收入 ---
+  var extraTotal = G.coins;
+  gebi('extraTotal').textContent = extraTotal;
+
+  // --- 总计 ---
+  var grand = dishTotal + shopTotal + extraTotal;
+  gebi('grandTotal').textContent = grand;
+  gebi('bdDish').textContent = dishTotal;
+  gebi('bdShop').textContent = shopTotal;
+  gebi('bdExtra').textContent = extraTotal;
+
+  // Debug
+  var bcList = '';
+  for (var k in G.shops) { bcList += k + ':' + G.shops[k].builtCount + (G.shops[k].visited ? 'V' : '') + ' '; }
+  gebi('debugBar').textContent = 'DEBUG: dish=' + dishTotal + ' shop=' + shopTotal + ' extra=' + extraTotal + ' total=' + grand + ' consumed=' + consumed + ' flipCount=' + flipCount + ' flipped=' + flipped + ' cuju=' + (cujuActive ? 1 : 0) + ' shihe=' + (G.shihenianfeng ? 1 : 0) + ' jian=' + (G.jianyiyangde ? 1 : 0) + ' dice_g1=' + G.dice + ' dice_guasi=' + G.diceGuasi + ' totalBuilt=' + totalBuilt() + ' bound=' + (G.buildBound ? 1 : 0) + ' | ' + bcList;
+}
+
+// ====== 重置 ======
+function resetAll() {
+  G.ordered = 3;
+  G.extraDishes = false;
+  G.shihenianfeng = false;
+  G.jianyiyangde = false;
+  G.dishes = { g1: 0, g2: 0, g3: 0, g4: 0 };
+  G.dice = 0;
+  G.diceGuasi = 0;
+  G.nojian = false;
+  G.coins = 0;
+  for (var k in G.shops) {
+    G.shops[k].visited = false;
+    // 绑定建设时：保留已建栋数，不归零
+    if (!G.buildBound) {
+      G.shops[k].builtCount = 0;
+    }
+  }
+  gebi('orderedVal').textContent = '3';
+  var grades = ['g1','g2','g3','g4'];
+  for (var i = 0; i < grades.length; i++) {
+    gebi(grades[i]).textContent = '0';
+    var rowId = 'row' + grades[i].charAt(0).toUpperCase() + grades[i].charAt(1);
+    gebi(rowId).classList.remove('active');
+  }
+  var btns = document.getElementsByClassName('dice-btn');
+  for (var j = 0; j < btns.length; j++) btns[j].classList.remove('selected');
+  gebi('btnExtra').classList.remove('active');
+  gebi('btnShihe').classList.remove('active');
+  gebi('btnJian').classList.remove('active');
+  gebi('btnNojian').classList.remove('active');
+  gebi('coinsVal').textContent = '0';
+  renderShops();
+  calculate();
+}
+
+// ====== 初始化 ======
+renderShops();
+calculate();
+</script>
+</body>
+</html>
