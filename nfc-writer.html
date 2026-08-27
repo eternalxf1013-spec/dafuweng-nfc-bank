@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<!-- saved from url=(0120)file:///C:/Users/xF/WorkBuddy/2026-08-27-12-14-26/%E5%9C%B0%E4%BA%A7%E5%9C%B0%E5%9B%BE%E7%BC%96%E8%BE%91/nfc-writer.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>Monopoly NFC 写卡工具 · NTAG215 统一写入格式</title>
+<style>
+:root {
+    --bg-primary:#0F1923; --bg-secondary:#1A2832; --bg-card:#243447; --bg-hover:#2D4055;
+    --text-primary:#E8F0F5; --text-secondary:#8DA5B7; --text-muted:#5A7080;
+    --accent-gold:#F0C040; --accent-green:#27AE60; --accent-red:#E74C3C;
+    --accent-blue:#3498DB; --accent-purple:#9B59B6;
+    --border:rgba(255,255,255,0.08); --shadow:0 4px 20px rgba(0,0,0,0.3);
+    --radius:12px; --radius-sm:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;min-height:100vh;background:var(--bg-primary);color:var(--text-primary);font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-size:14px}
+body{padding:20px;max-width:1100px;margin:0 auto}
+h1{font-size:22px;color:var(--accent-gold);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.subtitle{font-size:12px;color:var(--text-secondary);margin-bottom:20px}
+h2{font-size:17px;font-weight:700;margin:24px 0 10px;color:var(--text-primary);display:flex;align-items:center;gap:6px}
+.card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-section{margin-bottom:14px}
+.card-section h3{font-size:14px;font-weight:600;color:var(--accent-gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.spec-table{width:100%;border-collapse:collapse;font-size:12px}
+.spec-table th,.spec-table td{padding:6px 10px;border:1px solid var(--border);text-align:left}
+.spec-table th{background:var(--bg-card);color:var(--text-secondary);font-weight:600}
+.spec-table td code{background:var(--bg-card);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:11px;color:var(--accent-gold)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+.card-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+.card-item:hover{background:var(--bg-hover);border-color:var(--accent-gold)}
+.card-item.selected{border-color:var(--accent-gold);background:rgba(240,192,64,.08);box-shadow:0 0 0 1px var(--accent-gold)}
+.card-icon{font-size:22px;flex-shrink:0}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:13px;font-weight:600}
+.card-type{font-size:10px;color:var(--text-muted);margin-top:2px}
+.card-payload{font-size:10px;font-family:monospace;color:var(--accent-blue);margin-top:4px;word-break:break-all}
+.btn{padding:10px 24px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:var(--accent-gold);color:#1A1A1A}
+.btn-primary:hover{background:#FFD050;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-danger{background:var(--accent-red);color:#fff}
+.btn-outline{background:transparent;color:var(--text-secondary);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--bg-card);color:var(--text-primary)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-lg{padding:14px 40px;font-size:16px}
+.status-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg-card);border-radius:var(--radius);margin-bottom:16px;font-size:13px}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot.ok{background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)}
+.dot.err{background:var(--accent-red)}
+.dot.idle{background:var(--text-muted)}
+.nfc-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.result-box{padding:14px;border-radius:var(--radius-sm);font-size:13px;margin-top:12px;word-break:break-all;white-space:pre-wrap;font-family:monospace}
+.result-ok{background:rgba(39,174,96,.15);border:1px solid var(--accent-green);color:var(--accent-green)}
+.result-err{background:rgba(231,76,60,.15);border:1px solid var(--accent-red);color:var(--accent-red)}
+.result-info{background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary)}
+.preview-box{background:#000;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:12px;color:var(--accent-green);white-space:pre;overflow-x:auto;margin-top:10px}
+.preview-box .addr{color:var(--text-muted)}
+.preview-box .data{color:var(--accent-gold)}
+.preview-box .ndef{color:var(--accent-blue)}
+.tag-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px}
+.tag-badge.player{background:var(--accent-blue);color:#fff}
+.tag-badge.property{background:var(--accent-gold);color:#1A1A1A}
+.tag-badge.fee{background:var(--accent-green);color:#fff}
+.tag-badge.spin{background:var(--accent-purple);color:#fff}
+.tag-badge.space{background:var(--accent-red);color:#fff}
+.nfc-read-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.nfc-read-item{padding:8px 12px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);font-size:12px}
+.warn-box{padding:12px;background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.3);border-radius:var(--radius-sm);font-size:12px;color:var(--accent-gold);margin:10px 0}
+@media(max-width:600px){.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>📡 Monopoly NFC 写卡工具</h1>
+<p class="subtitle">NTAG215 统一 NDEF 写入格式 · Web NFC API · 适配地产大亨银行 v3</p>
+
+<!-- ==================== 格式规格 ==================== -->
+<h2>📋 统一写入格式规格</h2>
+<div class="card">
+<div class="card-section">
+<h3>1. 标签规格 — NTAG215</h3>
+<table class="spec-table">
+<tbody><tr><th style="width:180px">参数</th><th>值</th></tr>
+<tr><td>标签型号</td><td>NXP NTAG215 (NTA215)</td></tr>
+<tr><td>用户容量</td><td>540 bytes（135 页 × 4 bytes，页 04h–88h）</td></tr>
+<tr><td>UID 长度</td><td>7 bytes（只读，硬件序列号）</td></tr>
+<tr><td>页面大小</td><td>4 bytes / page</td></tr>
+<tr><td>NDEF 支持</td><td>是（Capability Container 自动配置）</td></tr>
+<tr><td>本格式占用</td><td>≈ 30–80 bytes（远小于 540，余量充足）</td></tr>
+</tbody></table>
+</div>
+
+<div class="card-section">
+<h3>2. NDEF 消息结构</h3>
+<table class="spec-table">
+<tbody><tr><th style="width:160px">字段</th><th>值</th><th>说明</th></tr>
+<tr><td>NDEF 类型</td><td><code>text</code></td><td>NDEF Well-Known Type "T"（Text Record）</td></tr>
+<tr><td>语言代码</td><td><code>zh</code></td><td>中文</td></tr>
+<tr><td>编码</td><td><code>UTF-8</code></td><td>支持中文字符</td></tr>
+<tr><td>TNF</td><td><code>0x01</code></td><td>NFC Forum Well-Known Type</td></tr>
+<tr><td>Web NFC 写法</td><td><code>new NDEFWriter().write({records:[{recordType:"text",lang:"zh",data:payload}]})</code></td><td>单条 NDEF Text Record</td></tr>
+</tbody></table>
+</div>
+
+<div class="card-section">
+<h3>3. Payload 统一格式</h3>
+<p style="margin-bottom:8px;font-size:13px;color:var(--text-secondary)">所有卡片类型共用一条 pipe-delimited 文本，格式如下：</p>
+<div style="background:var(--bg-card);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:15px;color:var(--accent-gold);text-align:center">
+MONOPOLY|<span style="color:var(--accent-blue)">&lt;type&gt;</span>|<span style="color:var(--accent-green)">&lt;key&gt;</span>|<span style="color:var(--accent-red)">&lt;name&gt;</span>|<span style="color:#E67E22">&lt;id&gt;</span>
+</div>
+<table class="spec-table" style="margin-top:10px">
+<tbody><tr><th style="width:80px">字段</th><th style="width:100px">类型</th><th>说明</th></tr>
+<tr><td><code>MONOPOLY</code></td><td>固定头</td><td>魔数，用于识别本应用的标签（8 字节）</td></tr>
+<tr><td><code>&lt;type&gt;</code></td><td>枚举</td><td><code>player</code> · <code>property</code> · <code>fee</code> · <code>spin</code> · <code>space</code></td></tr>
+<tr><td><code>&lt;key&gt;</code></td><td>字符串</td><td>类型内唯一键：玩家 P+id / 地产 id / fee kind / spin kind / space key</td></tr>
+<tr><td><code>&lt;name&gt;</code></td><td>UTF-8</td><td>人类可读名称（中文城市名 / 卡名）</td></tr>
+<tr><td><code>&lt;id&gt;</code></td><td>整数</td><td>数字 ID（玩家/地产有值；费用/转盘/空间为 0）</td></tr>
+</tbody></table>
+</div>
+
+<div class="card-section">
+<h3>4. 五种卡片类型 — 完整字段对照</h3>
+<table class="spec-table">
+<tbody><tr><th>type</th><th>key</th><th>name</th><th>id</th><th>Payload 示例</th><th>badge</th></tr>
+<tr><td><span class="tag-badge player">player</span></td><td><code>P&lt;数字&gt;</code></td><td>玩家名</td><td>玩家ID</td><td><code>MONOPOLY|player|P1|张三|1</code></td><td>🔵 玩家卡</td></tr>
+<tr><td><span class="tag-badge property">property</span></td><td><code>&lt;地产ID&gt;</code></td><td>城市名</td><td>地产ID</td><td><code>MONOPOLY|property|1|温州|1</code></td><td>🟡 地产卡</td></tr>
+<tr><td><span class="tag-badge fee">fee</span></td><td><code>house|hotel|free</code></td><td>费用卡名</td><td>0</td><td><code>MONOPOLY|fee|house|房屋建造费|0</code></td><td>🟢 建造费用卡</td></tr>
+<tr><td><span class="tag-badge spin">spin</span></td><td><code>cost|free</code></td><td>转盘卡名</td><td>0</td><td><code>MONOPOLY|spin|cost|花费代币|0</code></td><td>🟣 旋转转盘卡</td></tr>
+<tr><td><span class="tag-badge space">space</span></td><td><code>空间key</code></td><td>空间名</td><td>0</td><td><code>MONOPOLY|space|go|起点|0</code></td><td>🔴 特殊地契卡</td></tr>
+</tbody></table>
+</div>
+
+<div class="card-section">
+<h3>5. NTAG215 内存布局</h3>
+<table class="spec-table">
+<tbody><tr><th style="width:100px">页号</th><th style="width:100px">地址</th><th style="width:80px">大小</th><th>内容</th></tr>
+<tr><td>0–1</td><td>00h–07h</td><td>8B</td><td>UID（只读，7字节 + 1字节 BCC0）</td></tr>
+<tr><td>2</td><td>08h–0Bh</td><td>4B</td><td>BCC1 + L-Select（内部使用）</td></tr>
+<tr><td>3</td><td>0Ch–0Fh</td><td>4B</td><td>Capability Container（NDEF 配置，由系统自动写入）</td></tr>
+<tr><td>4–138</td><td>10h–22Fh</td><td>540B</td><td><b>NDEF 用户数据区（本格式写入区域）</b></td></tr>
+<tr><td>139–143</td><td>230h–23Fh</td><td>20B</td><td>配置页 / Dynamic Lock / CFG0 / CFG1</td></tr>
+</tbody></table>
+<div class="warn-box">⚠️ 实际占用：以最长 payload（28个地产）为例，"MONOPOLY|property|28|上海|28" = 25 字节文本 + NDEF 头约 8 字节 = 33 字节，仅占 NTAG215 容量的 6%，远不触及上限。</div>
+</div>
+</div>
+
+<!-- ==================== 写入工具 ==================== -->
+<h2>✍️ 写卡工具</h2>
+
+<div class="status-bar">
+<span class="dot idle" id="nfcDot"></span>
+<span id="nfcStatus">Web NFC 未启动 — 点击「启动 NFC」按钮</span>
+</div>
+
+<div class="nfc-actions" style="margin-bottom:16px">
+<button class="btn btn-sm btn-outline" id="initBtn" onclick="initNFC()">启动 NFC</button>
+<button class="btn btn-sm btn-outline" id="readBtn" onclick="readTag()" disabled="">🔍 读取验证</button>
+</div>
+
+<div class="card">
+<h3 style="font-size:14px;font-weight:600;color:var(--accent-gold);margin-bottom:10px">选择要写入的卡片</h3>
+
+<!-- 玩家卡 -->
+<div class="card-section">
+<h3>🔵 玩家卡</h3>
+<div style="margin-bottom:8px;font-size:12px;color:var(--text-secondary)">输入玩家信息后生成 payload</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+<input id="playerName" placeholder="玩家名（如张三）" style="flex:1;min-width:120px;padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px">
+<input id="playerId" placeholder="ID" type="number" min="1" style="width:60px;padding:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:13px">
+<button class="btn btn-sm btn-primary" onclick="genPlayerCard()">生成卡片</button>
+</div>
+<div id="playerCards" class="card-grid"></div>
+</div>
+
+<!-- 地产卡 -->
+<div class="card-section">
+<h3>🗺️ 地产卡（28 块）</h3>
+<div class="card-grid" id="propertyCards"><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">温州 (#1) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|1|温州|1</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">南京 (#2) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|2|南京|2</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">重庆站 (#3) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|3|重庆站|3</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">沈阳 (#4) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|4|沈阳|4</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">西安 (#5) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|5|西安|5</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">无锡 (#6) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|6|无锡|6</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">青岛 (#7) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|7|青岛|7</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">电力公司 (#8) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|8|电力公司|8</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">珠海 (#9) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|9|珠海|9</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">南昌 (#10) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|10|南昌|10</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">上海站 (#11) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|11|上海站|11</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">成都 (#12) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|12|成都|12</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">扬州 (#13) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|13|扬州|13</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">深圳 (#14) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|14|深圳|14</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">重庆 (#15) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|15|重庆|15</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">宁波 (#16) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|16|宁波|16</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">杭州 (#17) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|17|杭州|17</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">北京西站 (#18) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|18|北京西站|18</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">苏州 (#19) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|19|苏州|19</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">大连 (#20) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|20|大连|20</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">自来水公司 (#21) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|21|自来水公司|21</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">三亚 (#22) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|22|三亚|22</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">天津 (#23) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|23|天津|23</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">广州 (#24) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|24|广州|24</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">厦门 (#25) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|25|厦门|25</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">广州站 (#26) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|26|广州站|26</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">北京 (#27) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|27|北京|27</div></div></div><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">上海 (#28) <span class="tag-badge property">property</span></div><div class="card-type">MONOPOLY|property|28|上海|28</div></div></div></div>
+</div>
+
+<!-- 建造费用卡 -->
+<div class="card-section">
+<h3>🏠 建造费用卡（3 张）</h3>
+<div class="card-grid" id="feeCards"><div class="card-item"><span class="card-icon">🏠</span><div class="card-info"><div class="card-name">房屋建造费 <span class="tag-badge fee">fee</span></div><div class="card-type">MONOPOLY|fee|house|房屋建造费|0</div></div></div><div class="card-item"><span class="card-icon">🏨</span><div class="card-info"><div class="card-name">旅馆建造费 <span class="tag-badge fee">fee</span></div><div class="card-type">MONOPOLY|fee|hotel|旅馆建造费|0</div></div></div><div class="card-item"><span class="card-icon">🆓</span><div class="card-info"><div class="card-name">免建造 <span class="tag-badge fee">fee</span></div><div class="card-type">MONOPOLY|fee|free|免建造|0</div></div></div></div>
+</div>
+
+<!-- 旋转转盘卡 -->
+<div class="card-section">
+<h3>🎰 旋转转盘卡（2 张）</h3>
+<div class="card-grid" id="spinCards"><div class="card-item"><span class="card-icon">🎟️</span><div class="card-info"><div class="card-name">花费代币 <span class="tag-badge spin">spin</span></div><div class="card-type">MONOPOLY|spin|cost|花费代币|0</div></div></div><div class="card-item"><span class="card-icon">🆓</span><div class="card-info"><div class="card-name">免代币 <span class="tag-badge spin">spin</span></div><div class="card-type">MONOPOLY|spin|free|免代币|0</div></div></div></div>
+</div>
+
+<!-- 特殊地契卡 -->
+<div class="card-section">
+<h3>🛒 特殊地契卡（7 块 · 万物都可买扩展）</h3>
+<div class="card-grid" id="spaceCards"><div class="card-item"><span class="card-icon">🏁</span><div class="card-info"><div class="card-name">起点 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|go|起点|0</div></div></div><div class="card-item"><span class="card-icon">🅿️</span><div class="card-info"><div class="card-name">免费停车场 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|freeParking|免费停车场|0</div></div></div><div class="card-item"><span class="card-icon">🚔</span><div class="card-info"><div class="card-name">监狱 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|jail|监狱|0</div></div></div><div class="card-item"><span class="card-icon">🏛️</span><div class="card-info"><div class="card-name">所得税 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|incomeTax|所得税|0</div></div></div><div class="card-item"><span class="card-icon">💎</span><div class="card-info"><div class="card-name">奢侈品税 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|luxuryTax|奢侈品税|0</div></div></div><div class="card-item"><span class="card-icon">❓</span><div class="card-info"><div class="card-name">机会 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|chance|机会|0</div></div></div><div class="card-item"><span class="card-icon">📦</span><div class="card-info"><div class="card-name">社区宝箱 <span class="tag-badge space">space</span></div><div class="card-type">MONOPOLY|space|communityChest|社区宝箱|0</div></div></div></div>
+</div>
+</div>
+
+<!-- 写入操作 -->
+<div class="card" id="writePanel" style="display:none">
+<h3 style="font-size:14px;font-weight:600;color:var(--accent-gold);margin-bottom:10px">✅ 确认写入</h3>
+<div id="selectedInfo" style="padding:12px;background:var(--bg-card);border-radius:var(--radius-sm);margin-bottom:12px;font-size:13px"></div>
+<div id="hexPreview" class="preview-box"></div>
+<div class="nfc-actions">
+<button class="btn btn-lg btn-primary" id="writeBtn" onclick="writeTag()" disabled="">📡 写入标签</button>
+<button class="btn btn-sm btn-outline" onclick="clearSelection()">取消选择</button>
+</div>
+<div id="writeResult"></div>
+</div>
+
+<!-- 读取结果 -->
+<div class="card" id="readPanel" style="display:none">
+<h3 style="font-size:14px;font-weight:600;color:var(--accent-gold);margin-bottom:10px">🔍 读取结果</h3>
+<div id="readResult"></div>
+</div>
+
+<div class="warn-box">
+⚠️ <b>注意</b>：Web NFC 写入需要 Android Chrome（或其他支持 NDEFWriter 的浏览器）。iOS Safari 不支持 Web NFC。写入时请将 NTAG215 标签贴近手机背面上方 NFC 感应区，保持稳定直到写入完成。写入会覆盖标签上已有的 NDEF 数据。
+</div>
+
+<script>
+// ==================== 数据（与主应用一致） ====================
+const PROPERTIES = [
+    {id:1,name:"温州"},{id:2,name:"南京"},{id:3,name:"重庆站"},{id:4,name:"沈阳"},
+    {id:5,name:"西安"},{id:6,name:"无锡"},{id:7,name:"青岛"},{id:8,name:"电力公司"},
+    {id:9,name:"珠海"},{id:10,name:"南昌"},{id:11,name:"上海站"},{id:12,name:"成都"},
+    {id:13,name:"扬州"},{id:14,name:"深圳"},{id:15,name:"重庆"},{id:16,name:"宁波"},
+    {id:17,name:"杭州"},{id:18,name:"北京西站"},{id:19,name:"苏州"},{id:20,name:"大连"},
+    {id:21,name:"自来水公司"},{id:22,name:"三亚"},{id:23,name:"天津"},{id:24,name:"广州"},
+    {id:25,name:"厦门"},{id:26,name:"广州站"},{id:27,name:"北京"},{id:28,name:"上海"}
+];
+const FEES = [
+    {kind:'house',name:'房屋建造费',icon:'🏠'},
+    {kind:'hotel',name:'旅馆建造费',icon:'🏨'},
+    {kind:'free',name:'免建造',icon:'🆓'}
+];
+const SPINS = [
+    {kind:'cost',name:'花费代币',icon:'🎟️'},
+    {kind:'free',name:'免代币',icon:'🆓'}
+];
+const SPACES = [
+    {key:'go',name:'起点',icon:'🏁'},
+    {key:'freeParking',name:'免费停车场',icon:'🅿️'},
+    {key:'jail',name:'监狱',icon:'🚔'},
+    {key:'incomeTax',name:'所得税',icon:'🏛️'},
+    {key:'luxuryTax',name:'奢侈品税',icon:'💎'},
+    {key:'chance',name:'机会',icon:'❓'},
+    {key:'communityChest',name:'社区宝箱',icon:'📦'}
+];
+const GROUP_NAMES = {1:'棕色组',2:'棕色组',3:'铁路',4:'浅蓝组',5:'浅蓝组',6:'浅蓝组',7:'粉红组',8:'公用事业',9:'粉红组',10:'粉红组',11:'铁路',12:'橙色组',13:'橙色组',14:'橙色组',15:'红色组',16:'红色组',17:'红色组',18:'铁路',19:'黄色组',20:'黄色组',21:'公用事业',22:'黄色组',23:'绿色组',24:'绿色组',25:'绿色组',26:'铁路',27:'深蓝组',28:'深蓝组'};
+
+// ==================== 格式构建 ====================
+function buildPayload(type,key,name,id){
+    return 'MONOPOLY|'+type+'|'+key+'|'+name+'|'+id;
+}
+function parsePayload(text){
+    if(!text || !text.startsWith('MONOPOLY|')) return null;
+    var parts = text.split('|');
+    if(parts.length < 5) return null;
+    return {magic:parts[0], type:parts[1], key:parts[2], name:parts[3], id:parseInt(parts[4])||0, raw:text};
+}
+
+// ==================== 十六进制预览 ====================
+function payloadToHex(payload){
+    var lang = 'zh';
+    var langBytes = [0x02, 0x7A, 0x68]; // status(2) + 'z'(7A) + 'h'(68)
+    var payloadBytes = [];
+    for(var i=0;i<payload.length;i++){
+        var c = payload.charCodeAt(i);
+        if(c < 0x80) payloadBytes.push(c);
+        else if(c < 0x800){ payloadBytes.push(0xC0|(c>>6),0x80|(c&0x3F)); }
+        else if(c < 0x10000){ payloadBytes.push(0xE0|(c>>12),0x80|((c>>6)&0x3F),0x80|(c&0x3F)); }
+        else { payloadBytes.push(0xF0|(c>>18),0x80|((c>>12)&0x3F),0x80|((c>>6)&0x3F),0x80|(c&0x3F)); }
+    }
+    var totalLen = 3 + payloadBytes.length; // lang(3) + text
+    var lines = [];
+    var hexBytes = [];
+    // NDEF Header: 0xD1 = MB=1, ME=1, CF=0, SR=1, TNF=001
+    hexBytes.push(0xD1);
+    // Type length: 1
+    hexBytes.push(0x01);
+    // Payload length: totalLen
+    hexBytes.push(totalLen);
+    // Type: 'T' (0x54)
+    hexBytes.push(0x54);
+    // Status byte: 0x02 (UTF-8, lang length 2)
+    hexBytes.push(0x02);
+    // Language: 'zh'
+    hexBytes.push(0x7A, 0x68);
+    // Payload
+    hexBytes = hexBytes.concat(payloadBytes);
+    var page = 4;
+    var hexLines = [];
+    for(var i=0;i<hexBytes.length;i+=4){
+        var chunk = [];
+        for(var j=0;j<4&&i+j<hexBytes.length;j++) chunk.push(('0'+hexBytes[i+j].toString(16)).slice(-2).toUpperCase());
+        while(chunk.length<4) chunk.push('00');
+        var addr = ('0'+(page*4).toString(16)).slice(-2).toUpperCase();
+        hexLines.push({addr:addr,hex:chunk.join(' ')});
+        page++;
+    }
+    return hexLines;
+}
+
+function renderHexPreview(payload){
+    var hexLines = payloadToHex(payload);
+    var html = '';
+    var labels = ['NDEF Header','Type Length','Payload Length','Type "T"','Status(UTF8,zh)','Lang: z','Lang: h'];
+    var textBytes = [];
+    for(var i=0;i<payload.length;i++){
+        var c = payload.charCodeAt(i);
+        if(c < 0x80) textBytes.push(c);
+        else if(c < 0x800) textBytes.push(0xC0|(c>>6),0x80|(c&0x3F));
+        else if(c < 0x10000) textBytes.push(0xE0|(c>>12),0x80|((c>>6)&0x3F),0x80|(c&0x3F));
+    }
+    var allBytes = [];
+    allBytes.push(0xD1,0x01,3+textBytes.length,0x54,0x02,0x7A,0x68);
+    allBytes = allBytes.concat(textBytes);
+    var hexStr = allBytes.map(function(b){return ('0'+b.toString(16)).slice(-2).toUpperCase();});
+    // Render page by page
+    var page = 4;
+    for(var i=0;i<hexStr.length;i+=4){
+        var chunk = [];
+        for(var j=0;j<4&&i+j<hexStr.length;j++) chunk.push(hexStr[i+j]);
+        while(chunk.length<4) chunk.push('--');
+        var addr = ('0'+(page*4).toString(16)).slice(-2).toUpperCase();
+        html += '<span class="addr">['+addr+'h] P'+page.toString().padStart(2,'0')+'</span>  <span class="data">'+chunk.join(' ')+'</span>\n';
+        page++;
+    }
+    html += '\n<span class="ndef">UTF-8 文本: '+payload+'</span>\n';
+    html += '<span class="ndef">总字节数: '+allBytes.length+' / 540 bytes ('+Math.round(allBytes.length/540*100)+'%)</span>\n';
+    html += '<span class="ndef">NTAG215 页: '+(4)+'–'+(4+Math.ceil(allBytes.length/4)-1)+' / 0–143</span>';
+    return html;
+}
+
+// ==================== 卡片列表渲染 ====================
+var selectedCard = null;
+
+function createCardItem(icon,name,typeLabel,payload,badgeClass){
+    var div = document.createElement('div');
+    div.className = 'card-item';
+    div.innerHTML = '<span class="card-icon">'+icon+'</span>'+
+        '<div class="card-info">'+
+        '<div class="card-name">'+name+' <span class="tag-badge '+badgeClass+'">'+typeLabel+'</span></div>'+
+        '<div class="card-type">'+payload+'</div>'+
+        '</div>';
+    div.onclick = function(){ selectCard(div,icon,name,typeLabel,payload,badgeClass); };
+    return div;
+}
+
+function selectCard(el,icon,name,typeLabel,payload,badgeClass){
+    document.querySelectorAll('.card-item').forEach(function(e){e.classList.remove('selected');});
+    el.classList.add('selected');
+    selectedCard = {icon:icon,name:name,typeLabel:typeLabel,payload:payload,badgeClass:badgeClass};
+    var parsed = parsePayload(payload);
+    var info = '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:28px">'+icon+'</span>'+
+        '<div><div style="font-size:15px;font-weight:700;color:var(--accent-gold)">'+name+'</div>'+
+        '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">类型: '+parsed.type+' · key: '+parsed.key+' · id: '+parsed.id+'</div></div></div>'+
+        '<div style="margin-top:8px;font-family:monospace;font-size:12px;color:var(--accent-blue)">Payload: '+payload+'</div>';
+    document.getElementById('selectedInfo').innerHTML = info;
+    document.getElementById('hexPreview').innerHTML = renderHexPreview(payload);
+    document.getElementById('writePanel').style.display = '';
+    document.getElementById('writeBtn').disabled = (nfcReader === null);
+}
+
+function clearSelection(){
+    document.querySelectorAll('.card-item').forEach(function(e){e.classList.remove('selected');});
+    selectedCard = null;
+    document.getElementById('writePanel').style.display = 'none';
+}
+
+// 地产卡
+PROPERTIES.forEach(function(prop){
+    var payload = buildPayload('property',prop.id,prop.name,prop.id);
+    document.getElementById('propertyCards').appendChild(
+        createCardItem('🏠',prop.name+' (#'+prop.id+')','property',payload,'property')
+    );
+});
+// 费用卡
+FEES.forEach(function(fee){
+    var payload = buildPayload('fee',fee.kind,fee.name,0);
+    document.getElementById('feeCards').appendChild(
+        createCardItem(fee.icon,fee.name,'fee',payload,'fee')
+    );
+});
+// 转盘卡
+SPINS.forEach(function(spin){
+    var payload = buildPayload('spin',spin.kind,spin.name,0);
+    document.getElementById('spinCards').appendChild(
+        createCardItem(spin.icon,spin.name,'spin',payload,'spin')
+    );
+});
+// 特殊地契卡
+SPACES.forEach(function(sp){
+    var payload = buildPayload('space',sp.key,sp.name,0);
+    document.getElementById('spaceCards').appendChild(
+        createCardItem(sp.icon,sp.name,'space',payload,'space')
+    );
+});
+
+// 玩家卡（动态生成）
+function genPlayerCard(){
+    var name = document.getElementById('playerName').value.trim();
+    var id = parseInt(document.getElementById('playerId').value) || 1;
+    if(!name){ alert('请输入玩家名'); return; }
+    var payload = buildPayload('player','P'+id,name,id);
+    var container = document.getElementById('playerCards');
+    var existing = container.querySelector('.card-item');
+    if(existing) existing.remove();
+    container.appendChild(
+        createCardItem('🔵',name+' (P'+id+')','player',payload,'player')
+    );
+    document.getElementById('playerName').value = '';
+    document.getElementById('playerId').value = '';
+}
+
+// ==================== Web NFC 写入 ====================
+var nfcReader = null;
+function setNfcStatus(state, msg){
+    var dot = document.getElementById('nfcDot');
+    var text = document.getElementById('nfcStatus');
+    var readBtn = document.getElementById('readBtn');
+    var writeBtn = document.getElementById('writeBtn');
+    if(state==='connected'){ dot.className='dot ok'; text.textContent=msg||'NFC 已就绪'; readBtn.disabled=false; writeBtn.disabled=(!selectedCard); }
+    else if(state==='error'){ dot.className='dot err'; text.textContent=msg||'NFC 不可用'; }
+    else { dot.className='dot idle'; text.textContent=msg||'Web NFC 未启动'; }
+}
+function initNFC(){
+    if(!('NDEFReader' in window)){
+        setNfcStatus('error','当前浏览器不支持 Web NFC（需 Android Chrome 81+）');
+        return;
+    }
+    try{
+        nfcReader = new NDEFReader();
+        nfcReader.start().then(function(){
+            setNfcStatus('connected','NFC 已就绪 — 选择卡片后点击「写入标签」');
+        }).catch(function(err){
+            setNfcStatus('error','NFC 启动失败: '+err);
+        });
+    }catch(e){
+        setNfcStatus('error','NFC 不可用: '+e);
+    }
+}
+
+async function writeTag(){
+    if(!selectedCard){ alert('请先选择一张卡片'); return; }
+    if(!nfcReader){ alert('请先点击「启动 NFC」'); return; }
+    var resultDiv = document.getElementById('writeResult');
+    var writeBtn = document.getElementById('writeBtn');
+    writeBtn.disabled = true;
+    writeBtn.textContent = '⏳ 等待标签...';
+    resultDiv.innerHTML = '<div class="result-box result-info">请将 NTAG215 标签贴近手机背面 NFC 感应区...</div>';
+    try{
+        var payload = selectedCard.payload;
+        var writer = new NDEFWriter();
+        await writer.write({
+            records:[{
+                recordType:'text',
+                lang:'zh',
+                data:payload
+            }],
+            overwrite:true
+        });
+        resultDiv.innerHTML = '<div class="result-box result-ok">✅ 写入成功！\n\n'+
+            '卡片: '+selectedCard.icon+' '+selectedCard.name+'\n'+
+            'Payload: '+payload+'\n\n'+
+            '提示：可用「读取验证」功能检查标签内容</div>';
+    }catch(err){
+        resultDiv.innerHTML = '<div class="result-box result-err">❌ 写入失败: '+err+'\n\n请确保:\n· 标签为 NTAG215 且未锁定\n· 手机 NFC 已开启\n· 标签贴近感应区</div>';
+    }
+    writeBtn.disabled = false;
+    writeBtn.textContent = '📡 写入标签';
+}
+
+async function readTag(){
+    if(!nfcReader){ alert('请先点击「启动 NFC」'); return; }
+    var panel = document.getElementById('readPanel');
+    var resultDiv = document.getElementById('readResult');
+    panel.style.display = '';
+    resultDiv.innerHTML = '<div class="result-box result-info">⏳ 请将标签贴近手机背面...</div>';
+    try{
+        var reader = new NDEFReader();
+        await reader.scan();
+        reader.addEventListener('reading', function onRead(event){
+            resultDiv.innerHTML = '';
+            // Serial Number (UID)
+            var uid = event.serialNumber || '未知';
+            var sizeInfo = '';
+            if(event.message && event.message.records){
+                sizeInfo = '\nNDEF 记录数: '+event.message.records.length;
+            }
+            var html = '<div class="result-box result-ok">✅ 读取成功\n\n'+
+                '标签 UID (Serial): '+uid+'\n'+
+                'Size: '+(event.message?event.message.byteLength+' bytes':'未知')+sizeInfo+'</div>';
+            if(event.message && event.message.records){
+                html += '<div class="nfc-read-list">';
+                event.message.records.forEach(function(record,idx){
+                    var recordType = record.recordType;
+                    var data = '';
+                    if(recordType === 'text'){
+                        var dec = new TextDecoder();
+                        var raw = dec.decode(record.data);
+                        // strip language prefix
+                        if(raw.charCodeAt(0) === 0x02){
+                            raw = raw.substring(3);
+                        }
+                        data = raw;
+                        var parsed = parsePayload(raw);
+                        html += '<div class="nfc-read-item">'+
+                            '<b>#'+(idx+1)+' Text Record</b><br>'+
+                            'Raw: <code style="color:var(--accent-gold)">'+escHtml(data)+'</code>';
+                        if(parsed){
+                            html += '<br>解析: <span style="color:var(--accent-green)">'+
+                                '✅ MONOPOLY 卡片</span><br>'+
+                                '类型: <span class="tag-badge '+parsed.type+'">'+parsed.type+'</span> '+
+                                '名称: '+parsed.name+' · key: '+parsed.key+' · id: '+parsed.id;
+                        }else{
+                            html += '<br><span style="color:var(--accent-red)">⚠️ 非 Monopoly 格式</span>';
+                        }
+                        html += '</div>';
+                    }else{
+                        data = '[二进制 '+(record.data?record.data.byteLength:0)+' bytes]';
+                        html += '<div class="nfc-read-item"><b>#'+(idx+1)+' '+recordType+'</b><br>'+escHtml(data)+'</div>';
+                    }
+                });
+                html += '</div>';
+            }
+            resultDiv.innerHTML = html;
+        });
+    }catch(err){
+        resultDiv.innerHTML = '<div class="result-box result-err">❌ 读取失败: '+err+'</div>';
+    }
+}
+
+function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+
+
+</body></html>
